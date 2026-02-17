@@ -10,8 +10,8 @@ import Footer from "./components/Footer";
 
 import { DAILY_CALENDAR } from "@/app/vit-winter-2025-26-complete";
 import type { Timetable } from "@/app/types/attendance";
-import { onAuthStateChanged } from "firebase/auth";
 
+import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/app/lib/firebase";
 import { signOut, deleteUser } from "firebase/auth";
 import { doc, deleteDoc } from "firebase/firestore";
@@ -44,7 +44,9 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    async function loadAll() {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+
       const subjects = await loadFromStorage("subjects", []);
       const attendance = await loadFromStorage("attendance", {});
       const timetable = await loadFromStorage("timetable", defaultTimetable);
@@ -52,9 +54,9 @@ export default function Page() {
       setSubjects(subjects);
       setAttendance(attendance);
       setTimetable(timetable);
-    }
+    });
 
-    loadAll();
+    return () => unsub();
   }, []);
 
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);

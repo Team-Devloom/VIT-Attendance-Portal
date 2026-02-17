@@ -8,7 +8,6 @@
   gap: 1.5rem;
 }
 
-/* ── Create Subject Panel ── */
 .tt-creator {
   background: #0f1117;
   border: 1px solid #1e2433;
@@ -48,7 +47,7 @@
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
-  /* prevent iOS zoom on focus */
+
   font-size: 16px;
 }
 
@@ -81,7 +80,7 @@
   transition:
     background 0.18s,
     color 0.18s;
-  /* larger tap targets on mobile */
+
   min-width: 64px;
   min-height: 44px;
 }
@@ -126,7 +125,6 @@
   transform: translateY(0);
 }
 
-/* ── Subject Pool ── */
 .tt-pool {
   background: #0f1117;
   border: 1px solid #1e2433;
@@ -196,7 +194,6 @@
   color: #60a5fa;
 }
 
-/* ── Timetable Grid ── */
 .tt-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -310,9 +307,6 @@
   letter-spacing: 0.04em;
 }
 
-/* =============================================
-           MOBILE OVERRIDES  (≤ 640px)
-           ============================================= */
 @media (max-width: 640px) {
   .tt-creator {
     padding: 1.25rem 1.1rem;
@@ -320,7 +314,6 @@
     border-radius: 14px;
   }
 
-  /* Stack input + controls vertically */
   .tt-creator-row {
     flex-direction: column;
     align-items: stretch;
@@ -330,7 +323,7 @@
   .tt-input {
     width: 100%;
     padding: 0.85rem 1rem;
-    font-size: 16px; /* prevent iOS zoom */
+    font-size: 16px;
     border-radius: 12px;
   }
 
@@ -368,7 +361,6 @@
     min-height: 40px;
   }
 
-  /* Stack days vertically on mobile */
   .tt-grid {
     grid-template-columns: 1fr;
     gap: 0.75rem;
@@ -384,7 +376,6 @@
     font-size: 0.85rem;
   }
 
-  /* Horizontal scroll for subjects in day */
   .tt-day-subjects-scroll {
     display: flex;
     flex-direction: column;

@@ -83,6 +83,9 @@ export default function TimetableEditor({
             <button onClick={addSubject} className="tt-add-btn">
               + Add Subject
             </button>
+            <button onClick={addSubject} className="tt-add-btn">
+              Attendance Summary
+            </button>
           </div>
         </div>
 

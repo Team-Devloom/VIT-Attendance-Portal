@@ -2,7 +2,7 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
 import { auth } from "./firebase";
 
-/* ================= LOCAL ================= */
+/* LOCAL */
 
 export const saveToLocal = (key: string, data: unknown) => {
   if (typeof window !== "undefined") {
@@ -16,13 +16,20 @@ export const loadFromLocal = <T>(key: string, fallback: T): T => {
   return data ? JSON.parse(data) : fallback;
 };
 
-/* ================= FIREBASE ================= */
+/* FIREBASE */
 
-const getUserDocId = () => auth.currentUser?.uid;
+const getUserDocRef = () => {
+  const user = auth.currentUser;
+  if (!user) return null;
+  return doc(db, "users", user.uid);
+};
 
 export const saveToFirebase = async (data: unknown) => {
   try {
-    await setDoc(doc(db, "users", getUserDocId()!), { data });
+    const ref = getUserDocRef();
+    if (!ref) return;
+
+    await setDoc(ref, { data });
   } catch (err) {
     console.error("Firebase save failed:", err);
   }
@@ -30,10 +37,15 @@ export const saveToFirebase = async (data: unknown) => {
 
 export const loadFromFirebase = async <T>(fallback: T): Promise<T> => {
   try {
-    const snap = await getDoc(doc(db, "users", getUserDocId()!));
+    const ref = getUserDocRef();
+    if (!ref) return fallback;
+
+    const snap = await getDoc(ref);
+
     if (snap.exists()) {
       return snap.data().data as T;
     }
+
     return fallback;
   } catch (err) {
     console.error("Firebase load failed:", err);
@@ -41,13 +53,11 @@ export const loadFromFirebase = async <T>(fallback: T): Promise<T> => {
   }
 };
 
-/* ================= HYBRID ================= */
+/* HYBRID */
 
 export const saveToStorage = async (key: string, data: unknown) => {
-  // Always save locally
   saveToLocal(key, data);
 
-  // Save entire app state to firebase
   const localState = {
     subjects: loadFromLocal("subjects", []),
     attendance: loadFromLocal("attendance", {}),
@@ -70,12 +80,10 @@ export const loadFromStorage = async <T>(
   if (firebaseData && firebaseData[key as keyof typeof firebaseData]) {
     const value = firebaseData[key as keyof typeof firebaseData] as T;
 
-    // sync local
     saveToLocal(key, value);
 
     return value;
   }
 
-  // fallback to local
   return loadFromLocal(key, fallback);
 };

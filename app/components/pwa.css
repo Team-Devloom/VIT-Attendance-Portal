@@ -1,0 +1,112 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap");
+
+.pwa-root {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+
+  width: min(90%, 360px);
+  animation: pwa-slide-up 0.3s ease-out;
+}
+
+.pwa-content {
+  font-family: "Syne", sans-serif;
+  background: #0f1117;
+  border: 1px solid #1e2433;
+  border-radius: 14px;
+
+  padding: 0.9rem 1rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pwa-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.pwa-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: -0.01em;
+}
+
+.pwa-subtitle {
+  font-family: "Geist Mono", monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  color: #2e3a4e;
+}
+
+.pwa-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pwa-install-btn {
+  flex: 1;
+
+  font-family: "Geist Mono", monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  padding: 0.45rem 0.7rem;
+  border-radius: 8px;
+
+  background: linear-gradient(135deg, #0d9488, #0891b2);
+  border: none;
+  color: white;
+
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.pwa-install-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px #2dd4bf40;
+}
+
+.pwa-dismiss-btn {
+  flex: 1;
+
+  font-family: "Geist Mono", monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  padding: 0.45rem 0.7rem;
+  border-radius: 8px;
+
+  background: #161b27;
+  border: 1px solid #1e2433;
+  color: #4a5568;
+
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.pwa-dismiss-btn:hover {
+  background: #1e2433;
+  color: #94a3b8;
+}
+
+@keyframes pwa-slide-up {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

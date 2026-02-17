@@ -1,8 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap");
 
-/* ─────────────────────────────
-           BASE (desktop)
-        ───────────────────────────── */
 .cal-root {
   font-family: "Syne", sans-serif;
   display: flex;

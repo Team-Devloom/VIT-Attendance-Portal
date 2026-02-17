@@ -118,7 +118,7 @@ export default function Footer({
           </div>
 
           <div>
-            <span className="footer-col-title">Account</span>
+            <span className="footer-col-title">Your Account</span>
             <div className="footer-actions">
               <button
                 className="footer-action-btn footer-logout-btn"
@@ -151,7 +151,7 @@ export default function Footer({
         <div className="footer-bottom">
           <p className="footer-credit">
             © {new Date().getFullYear()} VIT Attendance Tracker ·{" "}
-            <span className="teal">MIT</span> License
+            <span className="teal">TEAM Devloom</span>
           </p>
           <p className="footer-made-by">
             Built by{" "}
@@ -162,7 +162,7 @@ export default function Footer({
             >
               Advik Gupta
             </a>{" "}
-            ·{" "}
+            under{" "}
             <a
               href="https://github.com/Team-Devloom"
               target="_blank"
