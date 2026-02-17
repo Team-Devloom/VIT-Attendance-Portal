@@ -1,28 +1,4 @@
-// ==========================================================
-// VIT Vellore – Winter Semester 2025-26 (FULL DATASET)
-// COMPLETE + DAY ORDER SUPPORT (FINAL CORRECT VERSION)
-// ==========================================================
-
-/* ================= TYPES ================= */
-
-export type DayType =
-  | "instructional"
-  | "holiday"
-  | "exam"
-  | "vacation"
-  | "festival"
-  | "no_instruction"
-  | "academic_process";
-
-export interface DailyCalendarEntry {
-  date: string; // YYYY-MM-DD
-  dayName: string;
-  type: DayType;
-  title: string;
-  dayOrder?: string; // 🔥 IMPORTANT FOR SATURDAY OVERRIDES
-}
-
-/* ================= META ================= */
+import type { DailyCalendarEntry, DayType } from "@/app/types/attendance";
 
 export const META = {
   university: "Vellore Institute of Technology",
@@ -38,9 +14,7 @@ export const META = {
   },
 };
 
-/* ================= IMPORTANT RANGES ================= */
-
-const RANGES = {
+const RANGES: Record<string, [string, string]> = {
   winterVacation: ["2025-12-21", "2026-01-04"],
   pongal: ["2026-01-15", "2026-01-18"],
   cat1: ["2026-01-27", "2026-02-02"],
@@ -49,9 +23,6 @@ const RANGES = {
   cat2: ["2026-03-15", "2026-03-23"],
   finalLab: ["2026-04-11", "2026-04-17"],
 };
-
-/* ================= DAY ORDER OVERRIDES ================= */
-/* 🔥 CRITICAL FOR CORRECT ATTENDANCE CALCULATION */
 
 const DAY_ORDER_OVERRIDES: Record<string, string> = {
   // December
@@ -69,8 +40,6 @@ const DAY_ORDER_OVERRIDES: Record<string, string> = {
   // April
   "2026-04-11": "Tuesday Day Order",
 };
-
-/* ================= SINGLE DAY SPECIALS ================= */
 
 const SPECIAL_DAYS: Record<string, { type: DayType; title: string }> = {
   "2025-12-05": {
@@ -111,8 +80,6 @@ const SPECIAL_DAYS: Record<string, { type: DayType; title: string }> = {
   },
 };
 
-/* ================= UTIL FUNCTIONS ================= */
-
 function isWithinRange(date: string, [start, end]: [string, string]): boolean {
   return date >= start && date <= end;
 }
@@ -120,8 +87,6 @@ function isWithinRange(date: string, [start, end]: [string, string]): boolean {
 function getDayName(date: Date) {
   return date.toLocaleDateString("en-US", { weekday: "long" });
 }
-
-/* ================= FULL DAILY DATASET ================= */
 
 export function generateFullCalendar(): DailyCalendarEntry[] {
   const start = new Date("2025-12-05");
@@ -135,7 +100,7 @@ export function generateFullCalendar(): DailyCalendarEntry[] {
 
     const overrideDayOrder = DAY_ORDER_OVERRIDES[iso];
 
-    // 🔹 Special Single Days
+    // Special Single Days
     if (SPECIAL_DAYS[iso]) {
       calendar.push({
         date: iso,
@@ -147,50 +112,50 @@ export function generateFullCalendar(): DailyCalendarEntry[] {
       continue;
     }
 
-    // 🔹 Ranges
-    if (isWithinRange(iso, RANGES.winterVacation as any)) {
+    // Ranges
+    if (isWithinRange(iso, RANGES.winterVacation)) {
       calendar.push({
         date: iso,
         dayName,
         type: "vacation",
         title: "Winter Vacation",
       });
-    } else if (isWithinRange(iso, RANGES.pongal as any)) {
+    } else if (isWithinRange(iso, RANGES.pongal)) {
       calendar.push({
         date: iso,
         dayName,
         type: "holiday",
         title: "Pongal Holidays",
       });
-    } else if (isWithinRange(iso, RANGES.cat1 as any)) {
+    } else if (isWithinRange(iso, RANGES.cat1)) {
       calendar.push({
         date: iso,
         dayName,
         type: "exam",
         title: "CAT - I",
       });
-    } else if (isWithinRange(iso, RANGES.withdraw as any)) {
+    } else if (isWithinRange(iso, RANGES.withdraw)) {
       calendar.push({
         date: iso,
         dayName,
-        type: "academic_process",
+        type: "instructional",
         title: "Course Withdraw Option",
       });
-    } else if (isWithinRange(iso, RANGES.riviera as any)) {
+    } else if (isWithinRange(iso, RANGES.riviera)) {
       calendar.push({
         date: iso,
         dayName,
         type: "no_instruction",
         title: "Riviera 2026",
       });
-    } else if (isWithinRange(iso, RANGES.cat2 as any)) {
+    } else if (isWithinRange(iso, RANGES.cat2)) {
       calendar.push({
         date: iso,
         dayName,
         type: "exam",
         title: "CAT - II",
       });
-    } else if (isWithinRange(iso, RANGES.finalLab as any)) {
+    } else if (isWithinRange(iso, RANGES.finalLab)) {
       calendar.push({
         date: iso,
         dayName,
@@ -199,7 +164,7 @@ export function generateFullCalendar(): DailyCalendarEntry[] {
         dayOrder: overrideDayOrder,
       });
     } else {
-      // 🔥 Default = Instructional Day
+      // Default = Instructional Day
       calendar.push({
         date: iso,
         dayName,
@@ -214,7 +179,5 @@ export function generateFullCalendar(): DailyCalendarEntry[] {
 
   return calendar;
 }
-
-/* ================= EXPORT ================= */
 
 export const DAILY_CALENDAR = generateFullCalendar();

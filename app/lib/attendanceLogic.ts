@@ -2,25 +2,14 @@ import {
   Subject,
   AttendanceRecord,
   DailyCalendarEntry,
+  AttendanceStatus,
 } from "@/app/types/attendance";
-
-/* =========================================================
-   BASIC HELPERS
-========================================================= */
 
 export const isInstructional = (day: DailyCalendarEntry) =>
   day.type === "instructional";
 
 export const getSubjectClassWeight = (subject: Subject) =>
   subject.type === "lab" ? 2 : 1;
-
-/* =========================================================
-   DAY ORDER HANDLING (CRITICAL FIX)
-   This properly handles:
-   - Saturday with "Monday Day Order"
-   - Tuesday Day Order overrides
-   - Normal weekdays
-========================================================= */
 
 const weekdayMap: Record<string, number> = {
   Monday: 1,
@@ -31,25 +20,21 @@ const weekdayMap: Record<string, number> = {
 };
 
 export function getEffectiveWeekday(day: DailyCalendarEntry): number {
-  // If there is a special day order (like Saturday = Monday Day Order)
-  if (day.dayOrder && typeof day.dayOrder === "string") {
-    const match = Object.keys(weekdayMap).find((key) =>
-      day.dayOrder.includes(key),
-    );
+  const order = day.dayOrder as string | undefined;
 
-    if (match) {
-      return weekdayMap[match];
+  if (order) {
+    const keys = Object.keys(weekdayMap) as (keyof typeof weekdayMap)[];
+
+    for (const key of keys) {
+      if (order.includes(key)) {
+        return weekdayMap[key];
+      }
     }
   }
 
-  // Otherwise use actual calendar weekday
-  const jsDay = new Date(day.date).getDay(); // 0=Sunday
-  return jsDay === 0 ? 7 : jsDay; // convert Sunday → 7
+  const jsDay = new Date(day.date).getDay();
+  return jsDay === 0 ? 7 : jsDay;
 }
-
-/* =========================================================
-   MAIN ATTENDANCE CALCULATION
-========================================================= */
 
 export function calculateSubjectStats(
   subject: Subject,
@@ -105,10 +90,6 @@ export function calculateSubjectStats(
   };
 }
 
-/* =========================================================
-   SAFE ABSENCE CALCULATION (75% RULE)
-========================================================= */
-
 export function safeAbsences(total: number, currentAbsent: number) {
   const allowed = Math.floor(total * 0.25);
   return allowed - currentAbsent;
@@ -147,27 +128,27 @@ export function getAttendanceHistory(
   attendance: AttendanceRecord,
   timetable: Record<number, string[]>,
   untilDate?: string,
-) {
-  const history: {
-    date: string;
-    status: "absent" | "od";
-  }[] = [];
+  startDate?: string,
+): { date: string; status: AttendanceStatus }[] {
+  const history: { date: string; status: AttendanceStatus }[] = [];
 
   calendar.forEach((day) => {
     if (day.type !== "instructional") return;
     if (untilDate && day.date > untilDate) return;
+    if (startDate && day.date < startDate) return;
 
     const effectiveWeekday = getEffectiveWeekday(day);
     const subjectIds = timetable[effectiveWeekday] || [];
 
     if (!subjectIds.includes(subject.id)) return;
 
-    const status = attendance[day.date]?.[subject.id] ?? "present";
+    const status = attendance[day.date]?.[subject.id];
 
+    // Narrowing ensures proper union type
     if (status === "absent" || status === "od") {
       history.push({
         date: day.date,
-        status,
+        status, // now correctly inferred as AttendanceStatus
       });
     }
   });
