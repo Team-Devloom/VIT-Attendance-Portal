@@ -99,9 +99,12 @@ export default function AttendanceModal({
   const cat1Safe = cat1Allowed - cat1Stats.absent;
   const cat1Unused = Math.max(cat1Safe, 0);
 
-  const cat2Allowed = Math.floor(cat2Stats.total * 0.25);
-  const cat2BaseSafe = cat2Allowed - cat2Stats.absent;
-  const cat2Safe = cat2BaseSafe + cat1Unused;
+  const cat2WindowTotal = cat2Stats.total - cat1Stats.total;
+  const cat2WindowAbsent = cat2Stats.absent - cat1Stats.absent;
+  const cat2WindowAllowed = Math.floor(cat2WindowTotal * 0.25);
+  const cat2WindowSafe = cat2WindowAllowed - cat2WindowAbsent;
+
+  const cat2Safe = cat1Unused + Math.max(cat2WindowSafe, 0);
 
   const getPctColor = (p: number) =>
     p >= 85 ? "#2dd4bf" : p >= 75 ? "#fbbf24" : "#f87171";
@@ -114,7 +117,7 @@ export default function AttendanceModal({
     {
       label: "Before CAT 1",
       stats: cat1Stats,
-      extra: { label: "Safe absences left", value: cat1Safe },
+      extra: { label: "Safe absences left", value: Math.max(cat1Safe, 0) },
     },
     {
       label: "Before CAT 2",
@@ -132,18 +135,8 @@ export default function AttendanceModal({
   ];
   const today = new Date().toISOString().split("T")[0];
   const activeExam =
-    examSequence.find((exam) => exam.date > today) ||
+    examSequence.find((e) => e.date > today) ??
     examSequence[examSequence.length - 1];
-
-  const cat1StatsHeader = calculateSubjectStats(
-    subject,
-    calendar,
-    attendance,
-    timetable,
-    EXAM_DATES.CAT1_START,
-  );
-  const cat1AllowedHeader = Math.floor(cat1StatsHeader.total * 0.25);
-  const cat1UnusedHeader = Math.max(cat1Allowed - cat1StatsHeader.absent, 0);
 
   const nextExamStats = calculateSubjectStats(
     subject,
@@ -152,9 +145,18 @@ export default function AttendanceModal({
     timetable,
     activeExam.date,
   );
-  const nextAllowed = Math.floor(nextExamStats.total * 0.25);
-  let safeTillNext = nextAllowed - nextExamStats.absent;
-  if (activeExam.name !== "CAT 1") safeTillNext += cat1Unused;
+
+  let safeTillNext: number;
+  if (activeExam.name === "CAT 1") {
+    const allowed = Math.floor(nextExamStats.total * 0.25);
+    safeTillNext = allowed - nextExamStats.absent;
+  } else {
+    const windowTotal = nextExamStats.total - cat1Stats.total;
+    const windowAbsent = nextExamStats.absent - cat1Stats.absent;
+    const windowAllowed = Math.floor(windowTotal * 0.25);
+    const windowSafe = windowAllowed - windowAbsent;
+    safeTillNext = cat1Unused + Math.max(windowSafe, 0);
+  }
   safeTillNext = Math.max(safeTillNext, 0);
 
   return (
@@ -184,7 +186,6 @@ export default function AttendanceModal({
                   {subject.type}
                 </span>
               </div>
-
               <div className="modal-missable">
                 You can miss another{" "}
                 <span style={{ color: "#818cf8", fontWeight: 700 }}>
@@ -193,7 +194,6 @@ export default function AttendanceModal({
                 classes until {activeExam.name} to maintain 75%
               </div>
             </div>
-
             <button className="modal-close-btn" onClick={onClose}>
               ✕ Close
             </button>
@@ -202,7 +202,6 @@ export default function AttendanceModal({
           <div className="modal-body">
             <div className="modal-stats-col">
               <span className="modal-section-label">Attendance Breakdown</span>
-
               {statBlocks.map(({ label, stats, extra }) => {
                 const pct = stats.percentage;
                 const color = getPctColor(pct);
