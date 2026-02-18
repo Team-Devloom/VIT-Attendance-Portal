@@ -95,12 +95,10 @@ export default function AttendanceModal({
     EXAM_DATES.CAT1_START,
   );
 
-  // ===== CAT 1 =====
   const cat1Allowed = Math.floor(cat1Stats.total * 0.25);
   const cat1Safe = cat1Allowed - cat1Stats.absent;
   const cat1Unused = Math.max(cat1Safe, 0);
 
-  // ===== CAT 2 (carry forward) =====
   const cat2Allowed = Math.floor(cat2Stats.total * 0.25);
   const cat2BaseSafe = cat2Allowed - cat2Stats.absent;
   const cat2Safe = cat2BaseSafe + cat1Unused;
@@ -127,7 +125,6 @@ export default function AttendanceModal({
     { label: "Overall Semester", stats: overallStats, extra: null },
   ];
 
-  // ================= NEXT EXAM LOGIC =================
   const examSequence = [
     { name: "CAT 1", date: EXAM_DATES.CAT1_START },
     { name: "CAT 2", date: EXAM_DATES.CAT2_START },

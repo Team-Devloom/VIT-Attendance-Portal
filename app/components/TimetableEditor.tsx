@@ -21,6 +21,7 @@ interface TimetableEditorProps {
   setSubjects: React.Dispatch<React.SetStateAction<Subject[]>>;
   timetable: Timetable;
   setTimetable: React.Dispatch<React.SetStateAction<Timetable>>;
+  onForceSave: () => Promise<void>;
 }
 
 export default function TimetableEditor({
@@ -28,9 +29,11 @@ export default function TimetableEditor({
   setSubjects,
   timetable,
   setTimetable,
+  onForceSave,
 }: TimetableEditorProps) {
   const [name, setName] = useState("");
   const [type, setType] = useState<"theory" | "lab">("theory");
+  const [saving, setSaving] = useState(false);
 
   const addSubject = () => {
     if (!name.trim()) return;
@@ -48,6 +51,12 @@ export default function TimetableEditor({
     };
     setTimetable(updated);
     saveToStorage("timetable", updated);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    await onForceSave();
+    setSaving(false);
   };
 
   return (
@@ -85,6 +94,13 @@ export default function TimetableEditor({
             </button>
             <button onClick={addSubject} className="tt-add-btn">
               Attendance Summary
+            </button>
+            <button
+              onClick={handleSave}
+              className="tt-add-btn"
+              disabled={saving}
+            >
+              {saving ? "Saving…" : "☁️ Save"}
             </button>
           </div>
         </div>

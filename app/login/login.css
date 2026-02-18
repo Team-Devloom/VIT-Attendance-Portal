@@ -287,3 +287,172 @@
     font-size: 1.35rem;
   }
 }
+
+.login-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.login-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.85rem;
+}
+
+.login-input:focus {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.login-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-error {
+  color: #ff6b6b;
+  font-size: 0.82rem;
+  text-align: center;
+  margin: 0;
+}
+
+.login-toggle-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.2s;
+}
+
+.login-toggle-btn:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.login-toggle-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.login-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-hint {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.78rem;
+  text-align: center;
+  margin: 0;
+}
+
+.login-email-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.login-email-wrapper:focus-within {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.login-input-email {
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  flex: 1;
+  min-width: 0;
+}
+
+.login-input-email:focus {
+  outline: none;
+}
+
+.login-email-suffix {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.8rem;
+  padding-right: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: "Geist Mono", monospace;
+}
+
+.login-password-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.login-password-wrapper:focus-within {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.login-input-password {
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  flex: 1;
+  min-width: 0;
+}
+
+.login-input-password:focus {
+  outline: none;
+}
+
+.login-eye-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 12px;
+  color: rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.login-eye-btn:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.login-eye-btn svg {
+  width: 17px;
+  height: 17px;
+}

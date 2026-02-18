@@ -1,8 +1,7 @@
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { db } from "./firebase";
-import { auth } from "./firebase";
+import { db, auth } from "./firebase";
 
-/* LOCAL */
+/* ── LOCAL ── */
 
 export const saveToLocal = (key: string, data: unknown) => {
   if (typeof window !== "undefined") {
@@ -16,7 +15,7 @@ export const loadFromLocal = <T>(key: string, fallback: T): T => {
   return data ? JSON.parse(data) : fallback;
 };
 
-/* FIREBASE */
+/* ── FIREBASE ── */
 
 const getUserDocRef = () => {
   const user = auth.currentUser;
@@ -24,10 +23,16 @@ const getUserDocRef = () => {
   return doc(db, "users", user.uid);
 };
 
-export const saveToFirebase = async (data: unknown) => {
+export const saveToFirebase = async (): Promise<void> => {
   try {
     const ref = getUserDocRef();
     if (!ref) return;
+
+    const data = {
+      subjects: loadFromLocal("subjects", []),
+      attendance: loadFromLocal("attendance", {}),
+      timetable: loadFromLocal("timetable", {}),
+    };
 
     await setDoc(ref, { data });
   } catch (err) {
@@ -41,11 +46,7 @@ export const loadFromFirebase = async <T>(fallback: T): Promise<T> => {
     if (!ref) return fallback;
 
     const snap = await getDoc(ref);
-
-    if (snap.exists()) {
-      return snap.data().data as T;
-    }
-
+    if (snap.exists()) return snap.data().data as T;
     return fallback;
   } catch (err) {
     console.error("Firebase load failed:", err);
@@ -53,18 +54,45 @@ export const loadFromFirebase = async <T>(fallback: T): Promise<T> => {
   }
 };
 
-/* HYBRID */
+/* ── DIRTY FLAG & AUTO-SAVE ── */
 
-export const saveToStorage = async (key: string, data: unknown) => {
+let isDirty = false;
+let autoSaveTimer: ReturnType<typeof setInterval> | null = null;
+let onAutoSaveCallback: (() => void) | null = null;
+
+export const registerAutoSaveCallback = (cb: () => void) => {
+  onAutoSaveCallback = cb;
+};
+
+export const startAutoSave = () => {
+  if (autoSaveTimer) return; // already running
+  autoSaveTimer = setInterval(async () => {
+    if (!isDirty) return;
+    await saveToFirebase();
+    isDirty = false;
+    onAutoSaveCallback?.();
+  }, 60_000); // every 60 seconds
+};
+
+export const stopAutoSave = () => {
+  if (autoSaveTimer) {
+    clearInterval(autoSaveTimer);
+    autoSaveTimer = null;
+  }
+};
+
+/* ── HYBRID ── */
+
+export const saveToStorage = (key: string, data: unknown) => {
+  // Always save to local immediately
   saveToLocal(key, data);
+  // Mark dirty for next Firebase auto-save
+  isDirty = true;
+};
 
-  const localState = {
-    subjects: loadFromLocal("subjects", []),
-    attendance: loadFromLocal("attendance", {}),
-    timetable: loadFromLocal("timetable", {}),
-  };
-
-  await saveToFirebase(localState);
+export const forceSaveToFirebase = async (): Promise<void> => {
+  await saveToFirebase();
+  isDirty = false;
 };
 
 export const loadFromStorage = async <T>(
@@ -79,9 +107,7 @@ export const loadFromStorage = async <T>(
 
   if (firebaseData && firebaseData[key as keyof typeof firebaseData]) {
     const value = firebaseData[key as keyof typeof firebaseData] as T;
-
     saveToLocal(key, value);
-
     return value;
   }
 

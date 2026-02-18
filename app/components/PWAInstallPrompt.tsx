@@ -1,7 +1,6 @@
 "use client";
 
 import "./pwa.css";
-
 import { useEffect, useState } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -12,13 +11,27 @@ interface BeforeInstallPromptEvent extends Event {
   }>;
 }
 
+const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    const isMobile = () =>
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
     const handler = (e: Event) => {
+      if (!isMobile()) return;
+
+      const lastDismissed = localStorage.getItem("pwa-dismissed-at");
+
+      if (lastDismissed) {
+        const diff = Date.now() - Number(lastDismissed);
+        if (diff < TWO_DAYS) return;
+      }
+
       const installEvent = e as BeforeInstallPromptEvent;
       installEvent.preventDefault();
       setDeferredPrompt(installEvent);
@@ -38,7 +51,17 @@ export default function PWAInstallPrompt() {
 
     if (outcome === "accepted") {
       setVisible(false);
+      localStorage.removeItem("pwa-dismissed-at");
+    } else {
+      localStorage.setItem("pwa-dismissed-at", Date.now().toString());
     }
+
+    setDeferredPrompt(null);
+  };
+
+  const dismiss = () => {
+    localStorage.setItem("pwa-dismissed-at", Date.now().toString());
+    setVisible(false);
   };
 
   if (!visible) return null;
@@ -55,7 +78,7 @@ export default function PWAInstallPrompt() {
           <button className="pwa-install-btn" onClick={install}>
             Download App
           </button>
-          <button className="pwa-dismiss-btn" onClick={() => setVisible(false)}>
+          <button className="pwa-dismiss-btn" onClick={dismiss}>
             Later
           </button>
         </div>
