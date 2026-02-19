@@ -12,6 +12,7 @@ import {
 import TimetableEditor from "@/app/components/TimetableEditor";
 import CalendarView from "@/app/components/CalendarView";
 import AttendanceModal from "@/app/components/AttendanceModal";
+import AttendanceSummaryModal from "@/app/components/AttendanceSummaryModal";
 import Footer from "./components/Footer";
 import Toast from "./components/Toast";
 
@@ -34,6 +35,7 @@ export default function Page() {
   const [timetable, setTimetable] = useState<Timetable>(defaultTimetable);
   const [authChecked, setAuthChecked] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [showSummary, setShowSummary] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("Data auto-saved");
   const router = useRouter();
@@ -57,7 +59,6 @@ export default function Page() {
         setAttendance(attendance);
         setTimetable(timetable);
 
-        // Register toast callback and start auto-save
         registerAutoSaveCallback(() => showToast("Data auto-saved"));
         startAutoSave();
       }
@@ -74,6 +75,18 @@ export default function Page() {
   const handleForceSave = async () => {
     await forceSaveToFirebase();
     showToast("Saved to cloud ☁️");
+  };
+
+  const handleMark = async () => {
+    showToast("We will remind you to not miss!");
+  };
+
+  const handleMarkAbsent = async () => {
+    showToast("Oops missed that one");
+  };
+
+  const handleMarkOD = async () => {
+    showToast("Lucky you ODing that one!");
   };
 
   const handleLogout = async () => {
@@ -117,6 +130,7 @@ export default function Page() {
         timetable={timetable}
         setTimetable={setTimetable}
         onForceSave={handleForceSave}
+        onOpenSummary={() => setShowSummary(true)}
       />
 
       <CalendarView
@@ -126,6 +140,9 @@ export default function Page() {
         attendance={attendance}
         setAttendance={setAttendance}
         openModal={setSelectedSubject}
+        onMark={handleMark}
+        onMarkAbsent={handleMarkAbsent}
+        onMarkOD={handleMarkOD}
       />
 
       <AttendanceModal
@@ -135,6 +152,16 @@ export default function Page() {
         timetable={timetable}
         onClose={() => setSelectedSubject(null)}
       />
+
+      {showSummary && (
+        <AttendanceSummaryModal
+          subjects={subjects}
+          calendar={DAILY_CALENDAR}
+          attendance={attendance}
+          timetable={timetable as Record<number, string[]>}
+          onClose={() => setShowSummary(false)}
+        />
+      )}
 
       <Footer onLogout={handleLogout} onDeleteAccount={handleDeleteAccount} />
 

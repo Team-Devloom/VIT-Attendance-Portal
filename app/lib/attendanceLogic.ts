@@ -9,7 +9,7 @@ export const isInstructional = (day: DailyCalendarEntry) =>
   day.type === "instructional";
 
 export const getSubjectClassWeight = (subject: Subject) =>
-  subject.type === "lab" ? 2 : 1;
+  subject.type === "lab" ? 1 : 1;
 
 const weekdayMap: Record<string, number> = {
   Monday: 1,
@@ -56,10 +56,9 @@ export function calculateSubjectStats(
     const effectiveWeekday = getEffectiveWeekday(day);
     const subjectIds = timetable[effectiveWeekday] || [];
 
-    // 🔥 Only count if subject exists in that weekday timetable
     if (!subjectIds.includes(subject.id)) return;
 
-    const weight = subject.type === "lab" ? 2 : 1;
+    const weight = subject.type === "lab" ? 1 : 1;
 
     const status = attendance[day.date]?.[subject.id] ?? "present";
 
@@ -144,11 +143,10 @@ export function getAttendanceHistory(
 
     const status = attendance[day.date]?.[subject.id];
 
-    // Narrowing ensures proper union type
     if (status === "absent" || status === "od") {
       history.push({
         date: day.date,
-        status, // now correctly inferred as AttendanceStatus
+        status,
       });
     }
   });

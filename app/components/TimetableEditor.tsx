@@ -5,7 +5,6 @@ import { Subject } from "@/app/types/attendance";
 import { saveToStorage } from "@/app/lib/storage";
 import { v4 as uuid } from "uuid";
 import type { Timetable, Weekday } from "@/app/types/attendance";
-
 import "./TimetableEditor.css";
 
 const weekdays: { label: string; value: Weekday }[] = [
@@ -22,6 +21,7 @@ interface TimetableEditorProps {
   timetable: Timetable;
   setTimetable: React.Dispatch<React.SetStateAction<Timetable>>;
   onForceSave: () => Promise<void>;
+  onOpenSummary: () => void;
 }
 
 interface DragState {
@@ -37,6 +37,7 @@ export default function TimetableEditor({
   timetable,
   setTimetable,
   onForceSave,
+  onOpenSummary,
 }: TimetableEditorProps) {
   const [name, setName] = useState("");
   const [type, setType] = useState<"theory" | "lab">("theory");
@@ -51,6 +52,9 @@ export default function TimetableEditor({
   const [dragOverDay, setDragOverDay] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [activeDrag, setActiveDrag] = useState<DragState | null>(null);
+
+  const [editingSubjectId, setEditingSubjectId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   const touchDragRef = useRef<DragState | null>(null);
   const touchGhostRef = useRef<HTMLDivElement | null>(null);
@@ -120,6 +124,39 @@ export default function TimetableEditor({
     setSubjects(updated);
     saveToStorage("subjects", updated);
     setName("");
+  };
+
+  const deleteSubject = (subjectId: string) => {
+    const updated = subjects.filter((s) => s.id !== subjectId);
+    setSubjects(updated);
+    saveToStorage("subjects", updated);
+
+    const updatedTimetable = { ...timetable };
+    for (const day of Object.keys(updatedTimetable) as unknown as Weekday[]) {
+      updatedTimetable[day] = (updatedTimetable[day] || []).filter(
+        (id) => id !== subjectId,
+      );
+    }
+    setTimetable(updatedTimetable);
+    saveToStorage("timetable", updatedTimetable);
+  };
+
+  const startEditing = (sub: Subject) => {
+    setEditingSubjectId(sub.id);
+    setEditingName(sub.name);
+  };
+
+  const commitEdit = () => {
+    if (!editingSubjectId || !editingName.trim()) {
+      setEditingSubjectId(null);
+      return;
+    }
+    const updated = subjects.map((s) =>
+      s.id === editingSubjectId ? { ...s, name: editingName.trim() } : s,
+    );
+    setSubjects(updated);
+    saveToStorage("subjects", updated);
+    setEditingSubjectId(null);
   };
 
   const removeFromDay = (day: Weekday, index: number) => {
@@ -398,7 +435,7 @@ export default function TimetableEditor({
           <button onClick={addSubject} className="tt-add-btn">
             + Add Subject
           </button>
-          <button onClick={addSubject} className="tt-add-btn">
+          <button onClick={() => onOpenSummary()} className="tt-add-btn">
             Attendance Summary
           </button>
           <button onClick={handleSave} className="tt-add-btn" disabled={saving}>
@@ -422,25 +459,75 @@ export default function TimetableEditor({
               No subjects yet — create one above
             </span>
           )}
-          {subjects.map((sub: Subject) => (
-            <div
-              key={sub.id}
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData("subjectId", sub.id);
-                e.dataTransfer.setData("fromPool", "true");
-                setActiveDrag({ type: "pool", subjectId: sub.id });
-              }}
-              onDragEnd={() => setActiveDrag(null)}
-              onTouchStart={(e) => handleChipTouchStart(e, sub.id, sub.name)}
-              onTouchMove={handleChipTouchMove}
-              onTouchEnd={handleChipTouchEnd}
-              className={`tt-chip ${sub.type === "lab" ? "tt-chip-lab" : "tt-chip-theory"}${activeDrag?.type === "pool" && activeDrag.subjectId === sub.id ? " tt-pill-dragging" : ""}`}
-            >
-              <span>{sub.name}</span>
-              <span className="tt-chip-badge">{sub.type}</span>
-            </div>
-          ))}
+          {subjects.map((sub: Subject) =>
+            editingSubjectId === sub.id ? (
+              <div
+                key={sub.id}
+                className={`tt-chip ${sub.type === "lab" ? "tt-chip-lab" : "tt-chip-theory"}`}
+                style={{ gap: "0.4rem" }}
+              >
+                <input
+                  className="tt-chip-edit-input"
+                  value={editingName}
+                  autoFocus
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") commitEdit();
+                    if (e.key === "Escape") setEditingSubjectId(null);
+                  }}
+                  onBlur={commitEdit}
+                />
+                <button
+                  className="tt-chip-action tt-chip-save"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    commitEdit();
+                  }}
+                  title="Save"
+                >
+                  ✓
+                </button>
+              </div>
+            ) : (
+              <div
+                key={sub.id}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("subjectId", sub.id);
+                  e.dataTransfer.setData("fromPool", "true");
+                  setActiveDrag({ type: "pool", subjectId: sub.id });
+                }}
+                onDragEnd={() => setActiveDrag(null)}
+                onTouchStart={(e) => handleChipTouchStart(e, sub.id, sub.name)}
+                onTouchMove={handleChipTouchMove}
+                onTouchEnd={handleChipTouchEnd}
+                className={`tt-chip ${sub.type === "lab" ? "tt-chip-lab" : "tt-chip-theory"}${activeDrag?.type === "pool" && activeDrag.subjectId === sub.id ? " tt-pill-dragging" : ""}`}
+              >
+                <span>{sub.name}</span>
+                <span className="tt-chip-badge">{sub.type}</span>
+                <button
+                  className="tt-chip-action tt-chip-edit"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    startEditing(sub);
+                  }}
+                  title="Edit name"
+                >
+                  ✎
+                </button>
+                <button
+                  className="tt-chip-action tt-chip-delete"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteSubject(sub.id);
+                  }}
+                  title="Delete subject"
+                >
+                  ×
+                </button>
+              </div>
+            ),
+          )}
         </div>
       </div>
 

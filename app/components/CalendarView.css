@@ -666,3 +666,9 @@
     color: #fb923c !important;
   }
 }
+
+.important-btn {
+  margin-top: 5px;
+  font-size: small;
+  cursor: pointer;
+}

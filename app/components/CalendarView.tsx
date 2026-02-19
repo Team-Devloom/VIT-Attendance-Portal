@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   DailyCalendarEntry,
   Subject,
@@ -68,6 +68,20 @@ function buildWeeks(
   return weeks;
 }
 
+function loadImportantDates(): Set<string> {
+  try {
+    const raw = localStorage.getItem("importantDates");
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw) as string[]);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveImportantDates(dates: Set<string>) {
+  localStorage.setItem("importantDates", JSON.stringify([...dates]));
+}
+
 interface CalendarViewProps {
   calendar: DailyCalendarEntry[];
   subjects: Subject[];
@@ -75,6 +89,9 @@ interface CalendarViewProps {
   attendance: AttendanceRecord;
   setAttendance: React.Dispatch<React.SetStateAction<AttendanceRecord>>;
   openModal: (subject: Subject) => void;
+  onMark: () => void;
+  onMarkAbsent: () => void;
+  onMarkOD: () => void;
 }
 
 export default function CalendarView({
@@ -84,8 +101,28 @@ export default function CalendarView({
   attendance,
   setAttendance,
   openModal,
+  onMark,
+  onMarkAbsent,
+  onMarkOD,
 }: CalendarViewProps) {
   const todayISO = new Date().toISOString().split("T")[0];
+
+  const [importantDates, setImportantDates] = useState<Set<string>>(() =>
+    loadImportantDates(),
+  );
+
+  const toggleImportant = (date: string) => {
+    setImportantDates((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) {
+        next.delete(date);
+      } else {
+        next.add(date);
+      }
+      saveImportantDates(next);
+      return next;
+    });
+  };
 
   const monthMap: Record<string, DailyCalendarEntry[]> = {};
   for (const day of calendar) {
@@ -141,6 +178,22 @@ export default function CalendarView({
   const monthLabel = activeDays.length ? getMonthLabel(activeDays[0].date) : "";
   const STATUS_OPTIONS: AttendanceStatus[] = ["absent", "od", "cancelled"];
 
+  const renderImportantBtn = (date: string, isMobile: boolean) => {
+    const isImportant = importantDates.has(date);
+    return (
+      <button
+        onClick={() => {
+          toggleImportant(date);
+          onMark();
+        }}
+        className={`important-btn${isImportant ? " important-btn-active" : ""}${isMobile ? " important-btn-mob" : ""}`}
+        title={isImportant ? "Unmark important" : "Mark as important"}
+      >
+        {isImportant ? "★ Important" : "☆ Mark"}
+      </button>
+    );
+  };
+
   const renderSubjectCard = (
     day: DailyCalendarEntry,
     subjectId: string,
@@ -179,7 +232,14 @@ export default function CalendarView({
           {STATUS_OPTIONS.map((status) => (
             <button
               key={status}
-              onClick={() => toggleStatus(day.date, sub.id, status)}
+              onClick={() => {
+                if (currentStatus !== "absent" && status === "absent") {
+                  onMarkAbsent();
+                } else if (currentStatus !== "od" && status === "od") {
+                  onMarkOD();
+                }
+                toggleStatus(day.date, sub.id, status);
+              }}
               className={`${btnClass} ${currentStatus === status ? STATUS_CONFIG[status].activeClass : ""}`}
               title={STATUS_CONFIG[status].label}
             >
@@ -219,7 +279,6 @@ export default function CalendarView({
               <span className="cal-month-title">{monthLabel}</span>
             </div>
 
-            {/* ── DESKTOP GRID ── */}
             <div className="cal-weekday-row">
               {WEEKDAY_LABELS.map((lbl, i) => (
                 <div
@@ -246,15 +305,19 @@ export default function CalendarView({
                   const subjectIds: string[] =
                     timetable[getEffectiveWeekday(day)] || [];
                   const isInstructional = day.type === "instructional";
+                  const isImportant = importantDates.has(day.date);
                   const { day: dayNum, month, year } = formatDate(day.date);
                   return (
                     <div
                       key={day.date}
                       ref={isToday ? todayRef : null}
-                      className={`cal-cell${!isInstructional ? " non-instructional" : ""}${isWeekend ? " is-weekend" : ""}${isToday ? " is-today" : ""}`}
+                      className={`cal-cell${!isInstructional ? " non-instructional" : ""}${isWeekend ? " is-weekend" : ""}${isToday ? " is-today" : ""}${isImportant ? " is-important" : ""}`}
                     >
                       {isToday && (
                         <span className="cal-today-badge">Today</span>
+                      )}
+                      {isImportant && (
+                        <span className="cal-important-badge">★ Important</span>
                       )}
                       <div className="cal-date-block">
                         <div className="cal-date-main">
@@ -283,13 +346,15 @@ export default function CalendarView({
                             renderSubjectCard(day, sid, false),
                           )}
                       </div>
+                      <div className="cal-cell-footer">
+                        {renderImportantBtn(day.date, false)}
+                      </div>
                     </div>
                   );
                 })}
               </div>
             ))}
 
-            {/* ── MOBILE: horizontal scroll per week ── */}
             <div className="cal-mobile-weeks">
               {weeks.map((week, wi) => (
                 <div key={wi} className="cal-mob-week-row">
@@ -306,13 +371,14 @@ export default function CalendarView({
                     const subjectIds: string[] =
                       timetable[getEffectiveWeekday(day)] || [];
                     const isInstructional = day.type === "instructional";
+                    const isImportant = importantDates.has(day.date);
                     const { day: dayNum, weekdayIdx } = formatDate(day.date);
 
                     return (
                       <div
                         key={day.date}
                         ref={isToday ? todayRef : null}
-                        className={`cal-mob-day-card${!isInstructional ? " non-instructional" : ""}${isWeekend ? " is-weekend" : ""}${isToday ? " is-today" : ""}`}
+                        className={`cal-mob-day-card${!isInstructional ? " non-instructional" : ""}${isWeekend ? " is-weekend" : ""}${isToday ? " is-today" : ""}${isImportant ? " is-important" : ""}`}
                       >
                         <div className="cal-mob-card-header">
                           <span
@@ -326,6 +392,14 @@ export default function CalendarView({
                             {dayNum}
                           </span>
                           {isToday && <span className="cal-mob-today-dot" />}
+                          {isImportant && (
+                            <span
+                              className="cal-mob-important-dot"
+                              title="Important"
+                            >
+                              ★
+                            </span>
+                          )}
                           {isInstructional && (
                             <span className="cal-mob-card-type">
                               {day.title
@@ -348,6 +422,9 @@ export default function CalendarView({
                             subjectIds.map((sid) =>
                               renderSubjectCard(day, sid, true),
                             )}
+                        </div>
+                        <div className="cal-mob-card-footer">
+                          {renderImportantBtn(day.date, true)}
                         </div>
                       </div>
                     );
