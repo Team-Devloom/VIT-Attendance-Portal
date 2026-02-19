@@ -13,7 +13,6 @@ import { getEffectiveWeekday } from "@/app/lib/attendanceLogic";
 import "./CalendarView.css";
 
 const STATUS_CONFIG: Record<string, { label: string; activeClass: string }> = {
-  present: { label: "Present", activeClass: "status-present-active" },
   absent: { label: "Absent", activeClass: "status-absent-active" },
   od: { label: "OD", activeClass: "status-od-active" },
   cancelled: { label: "Cancel", activeClass: "status-cancel-active" },
@@ -140,12 +139,7 @@ export default function CalendarView({
   const activeDays = monthMap[activeMonth] ?? [];
   const weeks = buildWeeks(activeDays);
   const monthLabel = activeDays.length ? getMonthLabel(activeDays[0].date) : "";
-  const STATUS_OPTIONS: AttendanceStatus[] = [
-    "present",
-    "absent",
-    "od",
-    "cancelled",
-  ];
+  const STATUS_OPTIONS: AttendanceStatus[] = ["absent", "od", "cancelled"];
 
   const renderSubjectCard = (
     day: DailyCalendarEntry,
@@ -189,11 +183,7 @@ export default function CalendarView({
               className={`${btnClass} ${currentStatus === status ? STATUS_CONFIG[status].activeClass : ""}`}
               title={STATUS_CONFIG[status].label}
             >
-              {status === "cancelled"
-                ? "cncl"
-                : status === "present"
-                  ? "pres"
-                  : status}
+              {status === "cancelled" ? "cncl" : status}
             </button>
           ))}
         </div>
